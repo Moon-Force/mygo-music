@@ -248,14 +248,35 @@ func (a *app) nativeVolumeSlider(c *ui.Context, pop popover) {
 	})
 }
 
+// wheelVolumeStep is how much one notch of a mouse wheel turns the volume.
+const wheelVolumeStep = 0.03
+
 // scrollVolume turns the volume up as the wheel or the fingers scroll up.
+// Fingers on a touchpad turn it as far as they scroll; a mouse wheel turns
+// it a fixed step a notch, as how far a notch scrolls depends on the
+// system's lines-per-notch setting, so a notch was a third of the volume
+// on some machines.
 func (a *app) scrollVolume(ev ui.InputEvent) bool {
 	if ev.Kind != ui.InputScroll {
 		return false
 	}
-	a.volume = min(1, max(0, a.volume-float64(ev.DY)/400))
+	a.volume = min(1, max(0, a.volume-volumeScroll(ev)))
 	a.pl.SetVolume(a.volume)
 	return true
+}
+
+// volumeScroll is how much a scroll turns the volume down.
+func volumeScroll(ev ui.InputEvent) float64 {
+	if ev.Precise {
+		return float64(ev.DY) / 400
+	}
+	switch {
+	case ev.DY > 0:
+		return wheelVolumeStep
+	case ev.DY < 0:
+		return -wheelVolumeStep
+	}
+	return 0
 }
 
 // volumeIcon is the speaker for volume v: silent, or with one or two waves.
