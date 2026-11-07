@@ -383,3 +383,31 @@ func TestLyricsFillATallWindow(t *testing.T) {
 		}
 	}
 }
+
+// The radio's chip over the title doesn't lift the cover up against the
+// tabs: the column was centred in its room, and where the cover fills
+// it, the chip moved the cover up by half the chip's height, nearly
+// touching them.
+func TestRadioChipLeavesTheCoverClearOfTheTabs(t *testing.T) {
+	for _, size := range [][2]int{{1200, 800}, {1400, 900}, {900, 650}} {
+		for _, radio := range []bool{false, true} {
+			a := newTestApp()
+			a.pl.Cue([]music.Track{song("1", "改变", "与非门")})
+			if radio {
+				a.pl.AttachRadio("Station", func(func([]music.Track)) {})
+			}
+			a.nowPlaying = true
+			w, h := size[0], size[1]
+			tt := ui.NewTester(a.view, w, h)
+			settled(tt)
+			tab, _ := tt.Find("Lyrics")
+			cover, ok := tt.Find("Album Cover")
+			if !ok {
+				t.Fatal("no cover")
+			}
+			if gap := cover.Y - (tab.Y + tab.H); gap < 16 {
+				t.Errorf("%dx%d, radio %v: the cover is only %v under the tabs", w, h, radio, gap)
+			}
+		}
+	}
+}

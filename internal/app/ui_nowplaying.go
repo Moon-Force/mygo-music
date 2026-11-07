@@ -340,12 +340,7 @@ func (a *app) nowPlayingBody(c *ui.Context, tr *music.Track, art *artwork, accen
 		side := float32(math.Min(float64(w)*0.36, 440))
 		// The cover leaves room above it for the tabs, starting as far
 		// under them as the wall's song does.
-		coverRoom := h - 436
-		coverSize := min(side, coverRoom)
-		// In a window taller than the cover grows, the column is shorter
-		// than the window by what the cover falls short of its room, and,
-		// centred, sits half of that lower.
-		coverSunk := (coverRoom - coverSize) / 2
+		coverSize := min(side, h-436)
 		// The column is as wide as the cover, for the cover, what plays
 		// and the tabs over it to start at one edge, but wide enough for
 		// the controls.
@@ -353,9 +348,13 @@ func (a *app) nowPlayingBody(c *ui.Context, tr *music.Track, art *artwork, accen
 		padX := npSideX(w)
 		a.npRise(reveal(npTabsRow(c, w), pointerIn), 0).Children(func() { a.paneTabs(c) })
 		ui.Row(c).Grow(1).Padding(0, padX, 44, padX).Gap(72).AlignItems(ui.Stretch).Children(func() {
-			var coverTop float32
-			ui.Column(c).Width(side).Justify(ui.Center).Gap(0).Children(func() {
-				coverTop = ui.Box(c.Key("cover-top")).Height(0).LayoutBounds().Y
+			ui.Column(c).Width(side).Gap(0).Children(func() {
+				// The column sits in the middle of its room, but never
+				// closer to the tabs than npCoverTop: what shows only at
+				// times, such as the radio's chip over the title, would
+				// lift the cover up against them, so it pushes the
+				// controls down into the room under them instead.
+				ui.Box(c.Key("over-cover")).Grow(1).Basis(0).MinHeight(npCoverTop)
 				// The cover flies out of the bar's as Now Playing opens.
 				a.npMorph(c, ui.Box(c.Key("cover-morph")).Size(coverSize, coverSize).AlignSelf(ui.Start)).Children(func() {
 					a.npCover(c, tr, art, coverSize)
@@ -392,28 +391,20 @@ func (a *app) nowPlayingBody(c *ui.Context, tr *music.Track, art *artwork, accen
 				a.npRise(ui.Row(c).Justify(ui.Center), 4).Children(func() {
 					a.volumeSlider(c, white.Alpha(0.7), white.Alpha(0.18), 180)
 				})
+				ui.Box(c.Key("under-controls")).Grow(1).Basis(0)
 			})
 
 			pane := ui.Column(c.Key("pane")).Grow(1).Basis(0).MinWidth(0)
 			a.npRise(pane, 2)
 			pane.Children(func() {
-				// The pane starts level with the cover beside it, but below the
-				// tabs, which start level with the pane's top: they come and go
-				// with the pointer, so they sit out of the flow, never over it.
-				// In a tall window it starts where the cover would, as tall
-				// as its room: level with the cover sunk in the middle, it
-				// left the top of the window empty, cutting off the lines
-				// before the one sung.
-				b := pane.LayoutBounds()
-				if b.H > 0 && coverTop > 0 {
-					if top := max(coverTop-coverSunk-b.Y, npTabsHeight+8); top != a.npPaneTop {
-						a.npPaneTop = top
-						c.AnimationFrame()
-					}
-				} else {
-					c.AnimationFrame() // not laid out yet: the next frame places it
-				}
-				ui.Box(c).Height(a.npPaneTop)
+				// The pane starts where the cover does as tall as its room,
+				// below the tabs, which start level with the pane's top: they
+				// come and go with the pointer, so they sit out of the flow,
+				// never over it. In a tall window, where the cover sinks into
+				// the middle of its column, the pane stays up there: level
+				// with the cover, it left the top of the window empty, cutting
+				// off the lines before the one sung.
+				ui.Box(c).Height(npCoverTop)
 				switch a.npPane {
 				case paneLyrics:
 					a.lyricsPane(c, tr, h)
@@ -444,6 +435,11 @@ func npSideX(w float32) float32 {
 // npTabsHeight is how tall the row of Now Playing's tabs is, for what is
 // under it to start below it.
 const npTabsHeight = 28
+
+// npCoverTop is how far under the strip along the top Now Playing's cover
+// starts, at the least, and the pane beside it: clear of the tabs over
+// them. It is where the cover starts as tall as its room.
+const npCoverTop = npTabsHeight + 22
 
 // npTabsRow is the row of Now Playing's tabs, in the same place for every
 // pane, so that they stay put going from one to another: at the top, level
