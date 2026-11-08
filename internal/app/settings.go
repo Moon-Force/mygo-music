@@ -67,6 +67,12 @@ type settings struct {
 	// Normalize evens out the loudness of tracks, by what their source
 	// measured of each.
 	Normalize bool `json:"normalize"`
+	// TrayHover shows a small player over the notification area's icon as
+	// the pointer rests on it (Windows).
+	TrayHover bool `json:"trayHover"`
+	// ThumbButtons puts the player's controls under the window's preview
+	// on the taskbar (Windows).
+	ThumbButtons bool `json:"thumbButtons"`
 	// HotComments shows a song's top comments in its quiet parts, in place of
 	// the lyrics (quietComment), for a source with comments: the listener
 	// turns it on.
@@ -88,7 +94,7 @@ type settings struct {
 }
 
 func defaultSettings() settings {
-	return settings{Language: i18n.System, NotchActivity: true, Quality: "high", Appearance: "system", Volume: 0.8, Normalize: true, AppIcon: "dock-and-menubar", CacheMB: 2048}
+	return settings{Language: i18n.System, NotchActivity: true, Quality: "high", Appearance: "system", Volume: 0.8, Normalize: true, TrayHover: true, ThumbButtons: true, AppIcon: "dock-and-menubar", CacheMB: 2048}
 }
 
 func settingsPath() (string, error) {

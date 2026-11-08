@@ -90,7 +90,12 @@ func (a *app) applyTray() {
 		// Windows' left click, where the right one opens the menu.
 		t.OnClick(a.showMain)
 		a.tray = t
+		a.syncTrayHover()
 	case !show && a.tray != nil:
+		if a.trayHover != nil {
+			a.trayHover.stop()
+			a.trayHover = nil
+		}
 		a.tray.Destroy()
 		a.tray = nil
 	}

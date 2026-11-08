@@ -73,6 +73,10 @@ func (a *app) changed() {
 	if a.notch != nil {
 		a.notch.setEnabled(a.settings.Notch)
 	}
+	a.syncTrayHover()
+	if a.thumb != nil {
+		a.thumb.setEnabled(a.settings.ThumbButtons)
+	}
 	a.redraw()
 }
 
@@ -426,6 +430,18 @@ func (a *app) settingsSections(c *ui.Context, p palette) []settingsSection {
 				a.changed()
 			}
 		})
+		if runtime.GOOS == "windows" {
+			row(T("Hover Controls"), T("A small player over the notification area's icon, which shows as the pointer rests on it"), func() {
+				if ui.Switch(c.Key("tray-hover"), &s.TrayHover).Label(T("Hover Controls")).Changed() {
+					a.changed()
+				}
+			})
+			row(T("Taskbar Preview Controls"), T("Previous, play/pause and next under the window's preview on the taskbar"), func() {
+				if ui.Switch(c.Key("thumb-buttons"), &s.ThumbButtons).Label(T("Taskbar Preview Controls")).Changed() {
+					a.changed()
+				}
+			})
+		}
 	})
 
 	add("cache", T("Cache"), iconDatabase, func(row settingsRow, block settingsBlock) {

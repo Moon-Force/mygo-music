@@ -56,9 +56,13 @@ type app struct {
 	win   *mygo.Window
 	notch *notch
 	tray  *mygo.Tray // the icon in the menu bar or notification area, while it shows
-	art   *artCache
-	pl    *player.Player
-	pal   palette
+	// trayHover is the player over the tray's icon on Windows, while the
+	// settings keep it.
+	trayHover *trayHover
+	thumb     *thumbbar // the taskbar preview's controls on Windows
+	art       *artCache
+	pl        *player.Player
+	pal       palette
 
 	// libs are the sources, the built-in one first, and what the app has of
 	// each. The active one's is embedded: a.mine is what the active source
@@ -193,6 +197,12 @@ func (a *app) redraw() {
 	}
 	if a.notch != nil && a.notch.win != nil {
 		a.notch.win.Invalidate()
+	}
+	if a.trayHover != nil {
+		a.trayHover.redraw()
+	}
+	if a.thumb != nil {
+		a.thumb.sync()
 	}
 	if a.settingsWin != nil {
 		a.settingsWin.Invalidate()
@@ -391,6 +401,7 @@ func Run() error {
 		// Shown or switched to a while after, it shows what's new.
 		a.win.OnFocus(a.freshenHome)
 		a.applyTray()
+		a.thumb = newThumbbar(a)
 		for _, link := range a.links {
 			a.openLink(link)
 		}
@@ -422,6 +433,12 @@ func Run() error {
 	// Windows leaves an icon in the notification area after its app until
 	// the pointer passes over it.
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
+		if a.trayHover != nil {
+			a.trayHover.stop()
+		}
+		if a.thumb != nil {
+			a.thumb.destroy()
+		}
 		if a.tray != nil {
 			a.tray.Destroy()
 		}
