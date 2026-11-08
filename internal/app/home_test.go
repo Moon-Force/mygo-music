@@ -375,3 +375,34 @@ func TestLibraryChangedReloadsWhatShows(t *testing.T) {
 	}
 	until(t, ch, func() bool { return a.browses["top"].page.Title == "Page top" })
 }
+
+// The Liked and Saved Albums pages are titled as the source's sidebar names
+// them, not only by the app's own names.
+func TestBuiltinPagesTakeTheSidebarTitle(t *testing.T) {
+	a, _, _ := browseApp()
+	f := fake(a)
+	f.caps["liked"], f.caps["savedAlbums"] = true, true
+	f.info.Navigation = []music.NavItem{
+		{Title: "Favorite Songs", Builtin: "liked"},
+		{Title: "Library Albums", Builtin: "savedAlbums"},
+	}
+	a.library.caps = probeCaps(f)
+	tt := ui.NewTester(a.view, 1200, 800)
+	for _, c := range []struct {
+		page  pageKind
+		title string
+	}{{pageLiked, "Favorite Songs"}, {pageSavedAlbums, "Library Albums"}} {
+		a.open(route{page: c.page})
+		tt.Frame()
+		tt.Frame()
+		n := 0
+		for _, s := range tt.Texts() {
+			if s == c.title {
+				n++
+			}
+		}
+		if n < 2 {
+			t.Errorf("%q shows %d times, want the sidebar and the page title", c.title, n)
+		}
+	}
+}

@@ -337,7 +337,7 @@ func (a *app) likedPage(c *ui.Context) {
 				Children(func() { ui.Icon(c, iconHeartFill).Size(84, 84) })
 			ui.Column(c).Grow(1).Shrink(1).MinWidth(0).Gap(8).Children(func() {
 				ui.Text(c, T("Playlist")).FontSize(12).FontWeight(600).TextColor(p.accent)
-				ui.Text(c, T("Liked Songs")).FontSize(30).FontWeight(800).LetterSpacing(-0.6)
+				ui.Text(c, a.builtinTitle("liked")).FontSize(30).FontWeight(800).LetterSpacing(-0.6)
 				if lib.likedPaged.loaded {
 					ui.Text(c, i18n.Songs(len(lib.likedList))).FontSize(13).TextColor(p.muted)
 				}

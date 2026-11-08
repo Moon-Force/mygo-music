@@ -165,7 +165,7 @@ func (a *app) loadSavedAlbums(lib *library) {
 func (a *app) savedAlbumsPage(c *ui.Context) {
 	lib := a.library
 	a.scrollPage(c, func() {
-		ui.Box(c).PaddingX(12).Children(func() { a.heading(c, T("Saved Albums"), "") })
+		ui.Box(c).PaddingX(12).Children(func() { a.heading(c, a.builtinTitle("savedAlbums"), "") })
 		ui.Box(c).PaddingX(12).Children(func() { a.albumGrid(c, lib.savedAlbums) })
 		a.pageFoot(c, &lib.savedAlbumsPaged, func() { a.loadSavedAlbums(lib) })
 		if lib.savedAlbumsPaged.loaded && len(lib.savedAlbums) == 0 {
